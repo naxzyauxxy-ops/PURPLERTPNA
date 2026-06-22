@@ -26,8 +26,6 @@ public class NetworkManager {
         this.plugin = plugin;
     }
 
-    // ── Socket server — listens for RTP triggers from other servers ──────────
-
     public void startSocketServer() {
         int port = plugin.getConfig().getInt("NETWORK.SOCKET-PORT", 25575);
         executor.submit(() -> {
@@ -95,8 +93,6 @@ public class NetworkManager {
         }, 5L, 10L);
     }
 
-    // ── Send RTP trigger to target backend via TCP socket ────────────────────
-
     public void sendRtpTrigger(UUID uuid, String targetServerKey) {
         String regionPath = getRegionPath(targetServerKey);
         if (regionPath == null) {
@@ -104,9 +100,11 @@ public class NetworkManager {
             return;
         }
 
-        String ip  = plugin.getConfig().getString(regionPath + ".PROXY-IP");
-        int port   = plugin.getConfig().getInt("NETWORK.SOCKET-PORT", 25575);
-        String msg = SECRET + ":" + uuid + ":" + targetServerKey;
+        String ip   = plugin.getConfig().getString(regionPath + ".PROXY-IP");
+        // Use per-region SOCKET-PORT, fall back to global SOCKET-PORT
+        int port    = plugin.getConfig().getInt(regionPath + ".SOCKET-PORT",
+                      plugin.getConfig().getInt("NETWORK.SOCKET-PORT", 25575));
+        String msg  = SECRET + ":" + uuid + ":" + targetServerKey;
 
         plugin.getLogger().info("[RTP] Sending socket trigger to " + ip + ":" + port);
         executor.submit(() -> {
@@ -119,8 +117,6 @@ public class NetworkManager {
             }
         });
     }
-
-    // ── Transfer player to target proxy using MC 1.20.5 Transfer packet ──────
 
     public void transferToProxy(Player player, String targetServerKey) {
         String regionPath = getRegionPath(targetServerKey);
@@ -138,8 +134,6 @@ public class NetworkManager {
             player.transfer(ip, port);
         }, 1L);
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     public boolean isSameRegion(String localServer, String targetServerKey) {
         if (localServer.isEmpty()) return false;
