@@ -30,7 +30,7 @@ public class NetworkManager {
         int port = plugin.getConfig().getInt("NETWORK.SOCKET-PORT", 25575);
         executor.submit(() -> {
             try {
-                serverSocket = new ServerSocket(port);
+                serverSocket = new ServerSocket(port, 50, java.net.InetAddress.getByName("0.0.0.0"));
                 running = true;
                 plugin.getLogger().info("[RTP] Socket server listening on port " + port);
                 while (running) {
